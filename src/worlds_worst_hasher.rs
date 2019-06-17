@@ -7,7 +7,7 @@ mod unit_tests;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct WorldsWorstHasher {
-    digest: Vec<u8>,
+    digest: <Self as GeneralHasher>::Digest,
 }
 
 impl WorldsWorstHasher {
@@ -36,7 +36,9 @@ impl Hasher for WorldsWorstHasher {
 }
 
 impl GeneralHasher for WorldsWorstHasher {
-    fn digest(&self) -> Vec<u8> {
+    type Digest = Vec<u8>;
+
+    fn digest(&self) -> Self::Digest {
         self.digest.clone()
     }
 

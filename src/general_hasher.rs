@@ -1,7 +1,8 @@
-use std::hash::Hasher;
+use std::hash::{Hash, Hasher};
 
 pub trait GeneralHasher: Hasher {
-    fn digest(&self) -> Vec<u8>;
+    type Digest: IntoIterator<Item = u8> + Clone + Hash;
+    fn digest(&self) -> Self::Digest;
 
     fn hash(&mut self, input: &[u8]) -> &mut Self {
         self.write(input);

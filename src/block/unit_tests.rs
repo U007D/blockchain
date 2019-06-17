@@ -2,7 +2,6 @@ use super::*;
 use crate::general_hasher::GeneralHasher;
 use crate::{consts::*, Clock, WorldsWorstHasher};
 use chrono::{DateTime, NaiveDateTime, Utc};
-use std::mem;
 use time::Duration;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -27,7 +26,7 @@ impl<H: GeneralHasher> TestClock<H> {
         })
     }
 
-    fn digest(&mut self) -> Vec<u8> {
+    fn digest(&mut self) -> H::Digest {
         self.hasher.reset();
         self.date_time.hash(&mut self.hasher);
         self.hasher.digest()
@@ -76,7 +75,7 @@ fn new_block_initializes_fields() {
     expected_hash.extend_from_slice(genesis_block_hash);
     expected_hash.push(b'*');
 
-    let expected_retval = Block::<TestClock<WorldsWorstHasher>, String> {
+    let expected_retval = Block::<TestClock<WorldsWorstHasher>, WorldsWorstHasher, String> {
         timestamp: now,
         data: data.clone(),
         prev_block_hash: genesis_block_hash.to_vec(),
@@ -87,7 +86,7 @@ fn new_block_initializes_fields() {
     let sut = Block::new;
 
     // when constructed
-    let retval = sut(&clock, &mut hasher, data, genesis_block_hash);
+    let retval = sut(&clock, &mut hasher, data, &genesis_block_hash.to_vec());
 
     // then the result should be as expected
     assert_eq!(retval.hash, expected_retval.hash);
