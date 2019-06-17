@@ -19,14 +19,16 @@
 
 mod args;
 mod block;
+mod clock;
 mod consts;
 mod error;
+mod general_hasher;
 mod worlds_worst_hasher;
 
 use std::result::Result as StdResult;
 use structopt::StructOpt;
-pub use worlds_worst_hasher::WorldsWorstHasher;
 pub use {args::Args, consts::*, error::Error};
+use {clock::Clock, general_hasher::GeneralHasher, worlds_worst_hasher::WorldsWorstHasher};
 
 pub type Result<T> = StdResult<T, Error>;
 

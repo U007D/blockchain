@@ -12,9 +12,11 @@ version = "0.1.0"
 [dependencies]
 derive_more = "*"
 structopt = "*"
+chrono = "0.4.6"
+time = "0.1.42"
 
 [dev-dependencies]
-pretty_assertions = "*"
+#pretty_assertions = "*"
 
 [profile.dev]
 codegen-units = 1

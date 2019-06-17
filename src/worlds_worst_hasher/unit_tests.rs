@@ -2,43 +2,66 @@ use super::*;
 
 #[test]
 fn hash_hashes_empty_input() {
-    // given a hasher and empty input
+    // setup
+    let input = b"";
+    let expected_hash = b"*";
+
+    // given a `GeneralHasher` and empty input
     let mut hasher = WorldsWorstHasher::new();
-    let input = "".as_bytes();
-    let expected_hash = "*".as_bytes();
 
     // when input is hashed
     let result = hasher.hash(input).digest();
 
     // the result should be as expected
-    assert_eq!(Vec::from(expected_hash), result);
+    assert_eq!(expected_hash.to_vec(), result);
 }
 
 #[test]
 fn hash_hashes_a_single_input() {
-    // given a hasher and an input
+    // setup
+    let input = b"abc";
+    let expected_hash = b"abc*";
+
+    // given a `GeneralHasher` and an input
     let mut hasher = WorldsWorstHasher::new();
-    let input = "abc".as_bytes();
-    let expected_hash = "abc*".as_bytes();
 
     // when input is hashed
     let result = hasher.hash(input).digest();
 
     // the result should be as expected
-    assert_eq!(Vec::from(expected_hash), result);
+    assert_eq!(expected_hash.to_vec(), result);
 }
 
 #[test]
 fn hash_hashes_multiple_inputs() {
-    // given a hasher and multiple inputs
+    // setup
+    let input = b"abc";
+    let input_2 = b"def";
+    let expected_hash = b"abcdef*";
+
+    // given a `GeneralHasher` and multiple inputs
     let mut hasher = WorldsWorstHasher::new();
-    let input = "abc".as_bytes();
-    let input_2 = "def".as_bytes();
-    let expected_hash = "abcdef*".as_bytes();
 
     // when input is hashed
     let result = hasher.hash(input).hash(input_2).digest();
 
     // the result should be as expected
-    assert_eq!(Vec::from(expected_hash), result);
+    assert_eq!(expected_hash.to_vec(), result);
+}
+
+#[test]
+fn reset_clears_hash_state() {
+    // setup
+    let input = b"abc";
+    let expected_hash = b"*";
+
+    // given a `GeneralHasher` in non-default state
+    let mut hasher = WorldsWorstHasher::new();
+    hasher.hash(input);
+
+    // when hasher state is reset and then hash is retrieved
+    let retval = hasher.reset().digest();
+
+    // then the hash should be as expected
+    assert_eq!(expected_hash.to_vec(), retval);
 }
