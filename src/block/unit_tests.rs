@@ -1,55 +1,7 @@
 use super::*;
-use crate::general_hasher::GeneralHasher;
-use crate::{consts::*, Clock, WorldsWorstHasher};
-use chrono::{DateTime, NaiveDateTime, Utc};
+use crate::test_clock::TestClock;
+use crate::WorldsWorstHasher;
 use time::Duration;
-
-#[derive(Clone, Debug, PartialEq)]
-struct TestClock<H: GeneralHasher> {
-    date_time: DateTime<Utc>,
-    hasher: H,
-}
-
-impl<H: GeneralHasher> TestClock<H> {
-    fn new(hasher: H) -> Self {
-        Self {
-            date_time: DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(0, 0), Utc),
-            hasher,
-        }
-    }
-
-    #[must_use]
-    fn adjust_by(&mut self, duration: Duration) -> Option<&mut Self> {
-        self.date_time.checked_add_signed(duration).and_then(|dt| {
-            self.date_time = dt;
-            Some(self)
-        })
-    }
-
-    fn digest(&mut self) -> H::Digest {
-        self.hasher.reset();
-        self.date_time.hash(&mut self.hasher);
-        self.hasher.digest()
-    }
-}
-
-impl<H: GeneralHasher> From<(H, Duration)> for TestClock<H> {
-    fn from((hasher, duration): (H, Duration)) -> Self {
-        let mut clock = Self::new(hasher);
-        clock
-            .adjust_by(duration)
-            .expect(msg::ERR_INTERNAL_CLOCK_OVERFLOW);
-        clock
-    }
-}
-
-impl<H: GeneralHasher> Clock for TestClock<H> {
-    type Output = DateTime<Utc>;
-
-    fn now(&self) -> Self::Output {
-        self.date_time
-    }
-}
 
 #[test]
 fn new_block_initializes_fields() {
@@ -75,19 +27,43 @@ fn new_block_initializes_fields() {
     expected_hash.extend_from_slice(genesis_block_hash);
     expected_hash.push(b'*');
 
-    let expected_retval = Block::<TestClock<WorldsWorstHasher>, WorldsWorstHasher, String> {
+    let expected_retval = Block::<WorldsWorstHasher, TestClock<WorldsWorstHasher>, String> {
         timestamp: now,
         data: data.clone(),
         prev_block_hash: genesis_block_hash.to_vec(),
-        hash: expected_hash,
+        digest: expected_hash,
     };
 
     // given a block constructor
     let sut = Block::new;
 
     // when constructed
-    let retval = sut(&clock, &mut hasher, data, &genesis_block_hash.to_vec());
+    let retval = sut(
+        &mut hasher,
+        &clock,
+        data.clone(),
+        genesis_block_hash.to_vec(),
+    );
 
     // then the result should be as expected
-    assert_eq!(retval.hash, expected_retval.hash);
+    assert_eq!(retval.digest, expected_retval.digest);
+}
+
+#[test]
+fn digest_returns_current_digest() {
+    // setup
+    let mut hasher = WorldsWorstHasher::new();
+    let clock = TestClock::from((hasher.clone(), Duration::nanoseconds(3)));
+    let block = Block::new(
+        &mut hasher,
+        &clock,
+        &"some data",
+        "blah, blah, blah".as_bytes().to_vec(),
+    );
+    let expected_retval = block.digest.clone();
+
+    // given
+    let retval = block.digest();
+    // then
+    assert_eq!(retval, expected_retval);
 }

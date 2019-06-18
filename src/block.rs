@@ -6,34 +6,40 @@ use std::hash::Hash;
 mod unit_tests;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Block<C, H, T>
+pub struct Block<H, C, T>
 where
-    C: Clock,
     H: GeneralHasher,
+    C: Clock,
 {
     timestamp: C::Output,
     data: T,
     prev_block_hash: H::Digest,
-    hash: H::Digest,
+    digest: H::Digest,
 }
 
-impl<C, H, T> Block<C, H, T>
+impl<H, C, T> Block<H, C, T>
 where
-    C: Clock,
     H: GeneralHasher,
+    C: Clock,
     T: Hash,
 {
-    fn new(clock: &C, hasher: &mut H, data: T, prev_block_hash: &H::Digest) -> Self {
-        let now = clock.now();
-        hasher.reset();
-        now.hash(hasher);
-        data.hash(hasher);
-        prev_block_hash.hash(hasher);
+    pub fn new(hasher: &mut H, clock: &C, data: T, prev_block_hash: H::Digest) -> Self {
+        let timestamp = clock.now();
         Self {
-            timestamp: clock.now(),
+            digest: {
+                hasher.reset();
+                timestamp.hash(hasher);
+                data.hash(hasher);
+                prev_block_hash.hash(hasher);
+                hasher.digest()
+            },
+            timestamp,
             data,
             prev_block_hash: prev_block_hash.clone(),
-            hash: hasher.digest(),
         }
+    }
+
+    pub fn digest(&self) -> H::Digest {
+        self.digest.clone()
     }
 }

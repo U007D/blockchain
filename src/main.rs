@@ -19,17 +19,19 @@
 
 mod args;
 mod block;
+mod blockchain;
 mod clock;
 mod consts;
 mod error;
 mod general_hasher;
+#[cfg(test)]
+mod test_clock;
 mod worlds_worst_hasher;
 
 use std::result::Result as StdResult;
 use structopt::StructOpt;
-pub use {args::Args, consts::*, error::Error};
+pub use {args::Args, block::Block, blockchain::Blockchain, consts::*, error::Error};
 use {clock::Clock, general_hasher::GeneralHasher, worlds_worst_hasher::WorldsWorstHasher};
-
 pub type Result<T> = StdResult<T, Error>;
 
 fn main() -> Result<()> {
